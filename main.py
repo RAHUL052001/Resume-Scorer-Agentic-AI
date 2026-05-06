@@ -12,3 +12,9 @@ def read_func():
         return {
                 "message":"Second api for the response"
         }
+
+@app.get("/third API")
+def read_func():
+        return {
+                "message":"Second api for the response"
+        }
