@@ -30,6 +30,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
     
     return {"info": f"file '{file.filename}' saved", "id": new_resume.id}
 
+
 @app.post("/jd-intake/")
 async def jd_intake(job_description: str):
     # Logic for JD intake module
