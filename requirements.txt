@@ -1,6 +1,11 @@
+# Core Google Gemini SDK
 google-generativeai
 
-# Hugging Face Integration
+# LangChain and Google GenAI adapter
+langchain
+langchain-google-genai
+
+# Hugging Face integration (used by local HF model code)
 langchain-huggingface
 transformers
 huggingface-hub
@@ -11,3 +16,7 @@ python-dotenv
 # Machine Learning Utilities
 numpy
 scikit-learn
+
+# Database (PostgreSQL) support used in database.py
+sqlalchemy
+psycopg2-binary
