@@ -1,3 +1,5 @@
+import uuid
+
 import chromadb
 from chromadb.config import Settings
 import posthog
@@ -31,8 +33,12 @@ collection = client.get_or_create_collection(
 
 def save_vector(embedding_vector, metadata=None, id=None):
     """Save only the embedding vector into ChromaDB."""
-    ids = [id] if id is not None else None
+    if id is None:
+        id = str(uuid.uuid4())
+
+    ids = [id]
     metadatas = [metadata] if metadata is not None else None
+
     return collection.add(
         ids=ids,
         embeddings=[embedding_vector],
@@ -42,6 +48,12 @@ def save_vector(embedding_vector, metadata=None, id=None):
 
 
 def persist():
-    """Persist ChromaDB storage to disk."""
-    client.persist()
+    """Persist ChromaDB storage to disk.
+
+    Current ChromaDB versions with file-backed storage persist automatically,
+    so no explicit client.persist() method is required.
+    """
+    if hasattr(client, "persist"):
+        client.persist()
+    return None
 
