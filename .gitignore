@@ -1,2 +1,5 @@
 .env
 /env
+chromadb/
+chroma_db/
+chroma_data/

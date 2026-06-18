@@ -1,29 +1,23 @@
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import os
 from dotenv import load_dotenv
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 load_dotenv()
 
-# Gemini Developer API
+# We request 128 (the model's lowest natively supported size) 
+# and slice it down to 8 in Python to keep the data perfectly clean.
 embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-2-preview",
-    output_dimensionality=32
+    model="gemini-embedding-2-preview", 
+    output_dimensionality=128
 )
 
-documents = [
-    "this is my first agentic prject",
-    "My birthday is on 5th of june",
-    "India have a biggest diversity"
-]
+documents = ["This is my first document.", "This is my second document.", "This is my third document."]
 
-all_vectors = [embeddings.embed_query(doc) for doc in documents]
+# Fetch the full embedding
+raw_vector = embeddings.embed_query(documents[0])
 
-print(all_vectors)
-# Vertex AI
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-2-preview",
-    project="my-project",
-    vertexai=True,
-)
+# Slice to exactly 8 dimensions and round to 2 decimal places
+short_vector = [round(num, 2) for num in raw_vector[:8]]
 
-
-
+print(f"Vector Length: {len(short_vector)}")
+print(f"Clean Short Vector: {short_vector}")
