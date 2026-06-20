@@ -37,7 +37,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     vector = text_to_embedding(args.text)
-    result = save_vector(vector, metadata={"source_text": args.text}, id=args.id)
+    result = save_vector(
+        vector,
+        metadata={"source_text": args.text},
+        document=args.text,
+        id=args.id,
+    )
     persist()
 
     print("Text saved to ChromaDB")

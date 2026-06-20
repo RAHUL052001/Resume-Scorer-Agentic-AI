@@ -31,19 +31,20 @@ collection = client.get_or_create_collection(
 )
 
 
-def save_vector(embedding_vector, metadata=None, id=None):
-    """Save only the embedding vector into ChromaDB."""
+def save_vector(embedding_vector, metadata=None, id=None, document=None):
+    """Save an embedding vector and its original text into ChromaDB."""
     if id is None:
         id = str(uuid.uuid4())
 
     ids = [id]
     metadatas = [metadata] if metadata is not None else None
+    documents = [document] if document is not None else [None]
 
     return collection.add(
         ids=ids,
         embeddings=[embedding_vector],
         metadatas=metadatas,
-        documents=[None],
+        documents=documents,
     )
 
 
