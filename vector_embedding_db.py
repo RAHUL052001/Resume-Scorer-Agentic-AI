@@ -26,7 +26,7 @@ client = chromadb.Client(
 )
 
 collection = client.get_or_create_collection(
-    name="resume_vectors",
+    name="resumes",
     metadata={"hnsw:space": "cosine"},
 )
 
