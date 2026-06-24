@@ -45,3 +45,5 @@ urllib3==2.6.3
 uuid_utils==0.15.0
 uvicorn==0.30.0
 zstandard==0.25.0
+SQLAlchemy==2.0.20
+python-multipart==0.0.6

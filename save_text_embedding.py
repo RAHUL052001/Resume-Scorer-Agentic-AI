@@ -1,6 +1,6 @@
 import json
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
 from vector_embedding_db import save_vector, persist
 
@@ -14,6 +14,43 @@ def text_to_embedding(text: str):
         output_dimensionality=128,
     )
     return embeddings.embed_query(text)
+
+
+def parse_resume_text_to_dict(raw_text: str, email: str | None = None) -> dict:
+    """Send extracted resume text to Gemini and parse it into a structured dictionary."""
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+
+    email_instruction = f"Use this email: {email}." if email else "Extract the email from the text if present."
+    prompt = (
+        "Extract the resume information from the text below and return only valid JSON. "
+        "The JSON must contain the following keys: email, skills, experience, projects. "
+        "Use empty arrays for missing sections. "
+        "The experience list should contain objects with company, role, and years. "
+        "The projects list should contain objects with name and tech. "
+        "The skills list should contain strings only. "
+        "for latest company if to date is missing then take is as current date and calculate years of experience accordingly. "
+        f"{email_instruction}\n\nResume text:\n{raw_text}"
+    )
+
+    response = llm.invoke(prompt)
+    model_output = response.content.strip()
+
+    def _extract_json(text: str) -> dict:
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and start < end:
+                return json.loads(text[start : end + 1])
+            raise
+
+    structured_data = _extract_json(model_output)
+
+    if email:
+        structured_data["email"] = email
+
+    return structured_data
 
 
 def save_resume_embeddings(resume_data: dict):

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Scorer API Dashboard</title>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; margin: 0; padding: 0; color: #1f2937; background: #f3f4f6; }
+    .page { max-width: 1120px; margin: 0 auto; padding: 24px; }
+    .hero { display: grid; gap: 16px; margin-bottom: 24px; }
+    .card { background: #ffffff; border-radius: 18px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); padding: 22px; }
+    h1 { margin: 0; font-size: 2rem; }
+    p { margin: 0; color: #4b5563; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    label { display: block; font-size: 0.95rem; margin-bottom: 8px; font-weight: 600; color: #111827; }
+    input, textarea, button, select { width: 100%; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 14px; font-size: 0.95rem; }
+    textarea { min-height: 160px; resize: vertical; }
+    button { background: #2563eb; color: white; border: none; cursor: pointer; font-weight: 700; transition: background 0.2s ease; }
+    button:hover { background: #1d4ed8; }
+    .result, .error { margin-top: 18px; }
+    .result-card { border: 1px solid #e5e7eb; border-radius: 14px; background: #fafafa; padding: 16px; margin-top: 12px; }
+    .result-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .result-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.9rem; color: #374151; margin-bottom: 12px; }
+    .endpoint-list { list-style: none; padding: 0; margin: 0; }
+    .endpoint-list li { margin-bottom: 10px; }
+    .endpoint-list code { background: #e5e7eb; padding: 4px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero card">
+      <div>
+        <h1>Resume Scorer API Dashboard</h1>
+        <p>Use this UI to explore endpoints, upload resumes, parse them, and match jobs.</p>
+      </div>
+      <div>
+        <strong>Available endpoints:</strong>
+        <ul class="endpoint-list">
+          <li><code>GET /health</code></li>
+          <li><code>POST /upload-resume</code></li>
+          <li><code>GET /resumes</code></li>
+          <li><code>GET /resumes/{resume_id}</code></li>
+          <li><code>GET /parse-resume/{resume_id}</code></li>
+          <li><code>GET /resume-metadata/{resume_id}</code></li>
+          <li><code>POST /match-job</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Job Matching</h2>
+        <label for="jobText">Job description</label>
+        <textarea id="jobText" placeholder="Paste the job description text here..."></textarea>
+        <label for="topK">Top K results</label>
+        <select id="topK">
+          <option value="1">1</option>
+          <option value="3" selected>3</option>
+          <option value="5">5</option>
+        </select>
+        <button id="matchBtn">Match Job</button>
+        <div id="matchResult" class="result"></div>
+      </div>
+
+      <div class="card">
+        <h2>Resume management</h2>
+        <label for="resumeFile">Upload PDF resume</label>
+        <input id="resumeFile" type="file" accept="application/pdf" />
+        <button id="uploadBtn">Upload Resume</button>
+        <div id="uploadResult" class="result"></div>
+        <hr style="margin: 20px 0;" />
+        <button id="listResumesBtn">Load Resumes</button>
+        <div id="resumeList" class="result"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>API Response</h2>
+      <pre id="responseOutput" style="white-space: pre-wrap; word-break: break-word; background: #f9fafb; padding: 16px; border-radius: 14px; border: 1px solid #e5e7eb; min-height: 180px;"></pre>
+    </div>
+  </div>
+
+  <script>
+    const responseOutput = document.getElementById('responseOutput');
+    const matchBtn = document.getElementById('matchBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const listResumesBtn = document.getElementById('listResumesBtn');
+    const uploadResult = document.getElementById('uploadResult');
+    const resumeList = document.getElementById('resumeList');
+
+    function showResponse(data) {
+      responseOutput.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function showError(message) {
+      responseOutput.textContent = `Error: ${message}`;
+      responseOutput.style.color = '#b91c1c';
+    }
+
+    async function sendMatchRequest() {
+      const jobDescription = document.getElementById('jobText').value.trim();
+      const topK = Number(document.getElementById('topK').value);
+      if (!jobDescription) {
+        showError('Job description is required.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/match-job?top_k=${topK}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain', 'Accept': 'application/json' },
+          body: jobDescription,
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          showError(result.detail || JSON.stringify(result));
+          return;
+        }
+        showResponse(result);
+      } catch (err) {
+        showError(err.message || err);
+      }
+    }
+
+    async function uploadResume() {
+      const fileInput = document.getElementById('resumeFile');
+      const file = fileInput.files[0];
+      if (!file) {
+        uploadResult.textContent = 'Select a PDF to upload.';
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/upload-resume', {
+          method: 'POST',
+          body: formData,
+        });
+        const result = await response.json();
+        uploadResult.textContent = response.ok ? 'Resume uploaded successfully.' : 'Upload failed.';
+        showResponse(result);
+      } catch (err) {
+        uploadResult.textContent = 'Upload failed.';
+        showError(err.message || err);
+      }
+    }
+
+    async function listResumes() {
+      try {
+        const response = await fetch('/resumes');
+        const result = await response.json();
+        if (!response.ok) {
+          showError(result.detail || JSON.stringify(result));
+          return;
+        }
+        resumeList.innerHTML = result.length ? result.map(item => `<div class="result-card"><strong>ID:</strong> ${item.id} <strong>File:</strong> ${item.filename}<br/><small>${item.upload_date}</small></div>`).join('') : '<div>No resumes found.</div>';
+        showResponse(result);
+      } catch (err) {
+        showError(err.message || err);
+      }
+    }
+
+    matchBtn.addEventListener('click', sendMatchRequest);
+    uploadBtn.addEventListener('click', uploadResume);
+    listResumesBtn.addEventListener('click', listResumes);
+  </script>
+</body>
+</html>
