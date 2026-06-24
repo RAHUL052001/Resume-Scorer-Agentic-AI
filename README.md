@@ -8,6 +8,84 @@ It allows a user to upload a resume PDF, extract and parse the resume text, save
 
 ## Project Flow
 
+                 Resume Scorer Agentic AI - Flow
+
+                         User
+                          |
+                          |
+                    Upload Resume PDF
+                          |
+                          v
+              +------------------------+
+              |     FastAPI API        |
+              |   POST /upload-resume  |
+              +------------------------+
+                          |
+                          v
+                 Extract PDF Text
+                    (PyPDF2)
+                          |
+                          v
+              Store Raw Resume Data
+                    (SQLite)
+                          |
+                          |
+                          v
+             Parse Resume Information
+          (Gemini LLM - JSON Extraction)
+                          |
+                          v
+          Structured Resume Data
+     (Email, Skills, Experience, Projects)
+                          |
+                          v
+                  Save Parsed Data
+                    (SQLite)
+                          |
+                          v
+              Create Text Embeddings
+             (Gemini Embedding Model)
+                          |
+                          v
+              Store Embeddings + Metadata
+                    (ChromaDB)
+                          |
+                          |
+        ----------------------------------
+        |                                |
+        v                                v
+
+ GET /resume-metadata/{id}          POST /match-job
+
+        |                                |
+        v                                v
+
+ Fetch Resume Vectors             User Enters Job Description
+        |                                |
+        v                                v
+
+ Return Resume Sections            Create Job Embedding
+ (JSON Response)                         |
+                                         v
+                              Search Similar Vectors
+                                  (ChromaDB)
+                                         |
+                                         v
+                              Calculate Similarity Score
+                                         |
+                                         v
+                              Rank Matching Resumes
+                                         |
+                                         v
+                              Return Best Candidates
+
+
+                          |
+                          v
+
+                 Dashboard UI
+        Upload | View Resume | Match Job | Results
+
 1. **Resume upload**
    - The user uploads a PDF via `POST /upload-resume`.
    - `PyPDF2` extracts the text from the PDF.
