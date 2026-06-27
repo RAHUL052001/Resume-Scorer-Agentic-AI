@@ -126,6 +126,7 @@ def list_resumes(db: Session = Depends(get_db)):
     ]
 
 
+
 @app.get("/resumes/{resume_id}")
 def get_resume(resume_id: int, db: Session = Depends(get_db)):
     resume = db.query(Resume).filter(Resume.id == resume_id).first()
