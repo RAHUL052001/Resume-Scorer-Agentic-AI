@@ -91,6 +91,7 @@ async def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_
         status="uploaded",
     )
 
+
     try:
         db.add(resume)
         db.commit()
